@@ -23,6 +23,13 @@ fn response_404_not_found() -> String {
    response
 }
 
+fn response_405_method_not_allowed() -> String {
+   let head = format!("HTTP/1.1 405 Method Not Allowed\r\nContent-Type: text/html\r\nContent-Length:{}\r\nConnection: close\r\n\r\n", static_resources::NOT_FOUND.len());
+   let mut response = head;
+   response.push_str(static_resources::NOT_FOUND);
+   response
+}
+
 fn response_200_ok(body: &str, mime_type: &str) -> String {
     let head = format!("HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", mime_type, body.len());
     let mut response = head;
@@ -76,8 +83,8 @@ fn response_update(current_song: &Option<Song>, queue: &Vec<Song>, status: &Stat
     }), "application/json")
 }
 
-pub fn handle_get(headers: &str) -> mpd::error::Result<String> {
-    let (path, _) = headers[4..].split_once(" ").unwrap_or(("", ""));
+fn handle_get(head: &str) -> mpd::error::Result<String> {
+    let (path, _) = head[4..].split_once(" ").unwrap_or(("", ""));
     match path {
         "/" => {
             Ok(response_200_ok(static_resources::CONTROL_PANEL, "text/html"))
@@ -87,6 +94,31 @@ pub fn handle_get(headers: &str) -> mpd::error::Result<String> {
         }
         "/script.js" => {
             Ok(response_200_ok(static_resources::SCRIPT, "text/javascript"))
+        }
+        "/update" => {
+            let mut mpd = Client::connect(config::MPD_ADDRESS)?;
+            Ok(response_update(&mpd.currentsong()?, &mpd.queue()?, &mpd.status()?))
+        }
+        _ => {
+            Ok(response_404_not_found())
+        }
+    }
+}
+
+fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
+    let (path, _) = head[5..].split_once(" ").unwrap_or(("", ""));
+    match path {
+        "/seek" => {
+            let mut mpd = Client::connect(config::MPD_ADDRESS)?;
+            if let Ok(where_to) = body.trim().parse::<f64>() {
+                mpd.rewind(where_to)?;
+            }
+            // workaround for freeze on skip
+            if mpd.status()?.state == State::Play {
+                mpd.pause(true)?;
+                mpd.play()?;
+            }
+            Ok(response_empty())
         }
         "/prev" => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
@@ -113,13 +145,18 @@ pub fn handle_get(headers: &str) -> mpd::error::Result<String> {
             mpd.play()?;
             Ok(response_empty())
         }
-        "/update" => {
-            let mut mpd = Client::connect(config::MPD_ADDRESS)?;
-            Ok(response_update(&mpd.currentsong()?, &mpd.queue()?, &mpd.status()?))
-        }
         _ => {
             Ok(response_404_not_found())
         }
+    }
+}
+
+pub fn handle_request(head: &str, body: &str) -> mpd::error::Result<String> {
+    let (method, _) = head.split_once(" ").unwrap_or(("", ""));
+    match method {
+        "GET" => handle_get(head),
+        "POST" => handle_post(head, body),
+        _ => Ok(response_405_method_not_allowed())
     }
 }
 

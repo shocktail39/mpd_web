@@ -7,7 +7,8 @@ pub const CONTROL_PANEL: &str = "<!DOCTYPE html>
     </head>
     <body>
         <h1 id=\"now_playing\"></h1>
-        <h3 id=\"timer\"></h3>
+        <input id=\"timer_slider\" type=\"range\" oninput=\"seek_time();\" />
+        <h3 id=\"timer_text\"></h3>
         <input type=\"button\" value=\"prev\" onclick=\"prev_song();\" />
         <input type=\"button\" value=\"pause\" onclick=\"toggle_pause();\" />
         <input type=\"button\" value=\"next\" onclick=\"next_song();\" />
@@ -18,6 +19,10 @@ pub const CONTROL_PANEL: &str = "<!DOCTYPE html>
 
 pub const STYLE: &str = ".current_song {
     font-weight: bold;
+}
+
+#timer_slider {
+    width: 100%;
 }";
 
 pub const SCRIPT: &str = "function to_timer(seconds) {
@@ -38,7 +43,14 @@ function update_info() {
 
         document.getElementById(\"now_playing\").textContent = \"now playing: \" + response_as_object[\"now_playing\"];
 
-        document.getElementById(\"timer\").textContent = to_timer(response_as_object[\"elapsed\"]) + \"/\" + to_timer(response_as_object[\"duration\"]);
+        let elapsed = response_as_object[\"elapsed\"];
+        let duration = response_as_object[\"duration\"];
+        document.getElementById(\"timer_text\").textContent = to_timer(elapsed) + \"/\" + to_timer(duration);
+        
+        let timer_slider = document.getElementById(\"timer_slider\");
+        timer_slider.setAttribute(\"max\", duration);
+        //timer_slider.setAttribute(\"value\", elapsed);
+        timer_slider.value = elapsed;
 
         let queue_element = document.getElementById(\"queue\");
         queue_element.innerHTML = \"\";
@@ -54,19 +66,31 @@ function update_info() {
     });
 }
 
+function seek_time() {
+    let time_to_go_to = document.getElementById(\"timer_slider\").value;
+    fetch(\"/seek\", {
+        method: \"POST\",
+        headers: {\"Content-Type\": \"text/plain\"},
+        body: time_to_go_to
+    }).then((body) => {update_info();});
+}
+
 function prev_song() {
-    fetch(\"/prev\");
-    update_info();
+    fetch(\"/prev\", {
+        method: \"POST\"
+    }).then((body) => {update_info();});
 }
 
 function toggle_pause() {
-    fetch(\"/pause\");
-    update_info();
+    fetch(\"/pause\", {
+        method: \"POST\"
+    }).then((body) => {update_info();});
 }
 
 function next_song() {
-    fetch(\"/next\");
-    update_info();
+    fetch(\"/next\", {
+        method: \"POST\"
+    }).then((body) => {update_info();});
 }
 
 window.onload = function() {
@@ -81,6 +105,16 @@ pub const NOT_FOUND: &str = "<!DOCTYPE html>
     </head>
     <body>
         <h1>404 Not Found</h1>
+    </body>
+</html>";
+
+pub const METHOD_NOT_ALLOWED: &str = "<!DOCTYPE html>
+<html>
+    <head>
+        <title>405 Method Not Allowed</title>
+    </head>
+    <body>
+        <h1>405 Method Not Allowed</h1>
     </body>
 </html>";
 
