@@ -24,9 +24,9 @@ fn response_404_not_found() -> String {
 }
 
 fn response_405_method_not_allowed() -> String {
-   let head = format!("HTTP/1.1 405 Method Not Allowed\r\nContent-Type: text/html\r\nContent-Length:{}\r\nConnection: close\r\n\r\n", static_resources::NOT_FOUND.len());
+   let head = format!("HTTP/1.1 405 Method Not Allowed\r\nContent-Type: text/html\r\nContent-Length:{}\r\nConnection: close\r\n\r\n", static_resources::METHOD_NOT_ALLOWED.len());
    let mut response = head;
-   response.push_str(static_resources::NOT_FOUND);
+   response.push_str(static_resources::METHOD_NOT_ALLOWED);
    response
 }
 
