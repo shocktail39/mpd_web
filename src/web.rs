@@ -1,0 +1,125 @@
+use crate::config;
+use mpd::{Client, Song, State, Status};
+
+pub mod static_resources;
+
+fn song_string(song: &Song) -> String {
+    let mut to_return = if let Some(title) = &song.title {
+        title
+    } else {
+        &song.file
+    }.clone();
+    if let Some(artist) = &song.artist {
+        to_return.push_str(" by ");
+        to_return.push_str(artist);
+    }
+    to_return
+}
+
+fn response_404_not_found() -> String {
+   let head = format!("HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\nContent-Length:{}\r\nConnection: close\r\n\r\n", static_resources::NOT_FOUND.len());
+   let mut response = head;
+   response.push_str(static_resources::NOT_FOUND);
+   response
+}
+
+fn response_200_ok(body: &str, mime_type: &str) -> String {
+    let head = format!("HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", mime_type, body.len());
+    let mut response = head;
+    response.push_str(body);
+    response
+}
+
+fn response_empty() -> String {
+    response_200_ok("", "text/plain")
+}
+
+fn response_update(current_song: &Option<Song>, queue: &Vec<Song>, status: &Status) -> String {
+    let now_playing_string = if let Some(song) = current_song {
+        &song_string(song)
+    } else {
+        "nothing"
+    };
+
+    let queue_strings = {
+        let mut qs = vec![];
+        for song in queue {
+            qs.push(song_string(song));
+        }
+        qs
+    };
+
+    let queue_pos = if let Some(pos) = status.song {
+        pos.pos
+    } else {
+        0
+    };
+
+    let current_song_elapsed_time = if let Some(duration) = status.elapsed {
+        duration.as_secs()
+    } else {
+        0
+    };
+
+    let current_song_duration = if let Some(duration) = status.duration {
+        duration.as_secs()
+    } else {
+        0
+    };
+
+    response_200_ok(&json::stringify(json::object! {
+        now_playing: now_playing_string,
+        queue: queue_strings,
+        queue_pos: queue_pos,
+        elapsed: current_song_elapsed_time,
+        duration: current_song_duration
+    }), "application/json")
+}
+
+pub fn handle_get(headers: &str) -> mpd::error::Result<String> {
+    let (path, _) = headers[4..].split_once(" ").unwrap_or(("", ""));
+    match path {
+        "/" => {
+            Ok(response_200_ok(static_resources::CONTROL_PANEL, "text/html"))
+        }
+        "/style.css" => {
+            Ok(response_200_ok(static_resources::STYLE, "text/css"))
+        }
+        "/script.js" => {
+            Ok(response_200_ok(static_resources::SCRIPT, "text/javascript"))
+        }
+        "/prev" => {
+            let mut mpd = Client::connect(config::MPD_ADDRESS)?;
+            mpd.prev()?;
+            // workaround for freeze on skip
+            mpd.pause(true)?;
+            mpd.play()?;
+            Ok(response_empty())
+        }
+        "/pause" => {
+            let mut mpd = Client::connect(config::MPD_ADDRESS)?;
+            if mpd.status()?.state == State::Stop {
+                mpd.play()?;
+            } else {
+                mpd.toggle_pause()?;
+            }
+            Ok(response_empty())
+        }
+        "/next" => {
+            let mut mpd = Client::connect(config::MPD_ADDRESS)?;
+            mpd.next()?;
+            // workaround for freeze on skip
+            mpd.pause(true)?;
+            mpd.play()?;
+            Ok(response_empty())
+        }
+        "/update" => {
+            let mut mpd = Client::connect(config::MPD_ADDRESS)?;
+            Ok(response_update(&mpd.currentsong()?, &mpd.queue()?, &mpd.status()?))
+        }
+        _ => {
+            Ok(response_404_not_found())
+        }
+    }
+}
+
