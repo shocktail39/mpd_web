@@ -6,19 +6,42 @@ pub const CONTROL_PANEL: &str = "<!DOCTYPE html>
         <script src=\"/script.js\"></script>
     </head>
     <body>
-        <h1 id=\"now_playing\"></h1>
-        <input id=\"timer_slider\" type=\"range\" oninput=\"seek_time();\" />
-        <h3 id=\"timer_text\"></h3>
-        <input type=\"button\" value=\"prev\" onclick=\"prev_song();\" />
-        <input type=\"button\" value=\"pause\" onclick=\"toggle_pause();\" />
-        <input type=\"button\" value=\"next\" onclick=\"next_song();\" />
-        <h2>queue:</h2>
-        <ol id=\"queue\"></ol>
+        <div id=\"all_songs\"></div>
+        <div id=\"controls\">
+            <h1 id=\"now_playing\"></h1>
+            <input id=\"timer_slider\" type=\"range\" oninput=\"seek_time();\" />
+            <h3 id=\"timer_text\"></h3>
+            <input type=\"button\" value=\"prev\" onclick=\"prev_song();\" />
+            <input type=\"button\" value=\"pause\" onclick=\"toggle_pause();\" />
+            <input type=\"button\" value=\"next\" onclick=\"next_song();\" />
+            <h2>queue:</h2>
+            <ol id=\"queue\"></ol>
+        </div>
     </body>
 </html>";
 
 pub const STYLE: &str = ".current_song {
     font-weight: bold;
+}
+
+#all_songs {
+    position: fixed;
+    top: 0%;
+    left: 0%;
+    width: 15%;
+    height: 100%;
+    overflow: scroll;
+    border-right: solid 1px black;
+}
+
+#controls {
+    position: fixed;
+    top: 0%;
+    left: 15%;
+    width: 85%;
+    height: 100%;
+    overflow: scroll;
+    margin-left: 8px;
 }
 
 #timer_slider {
@@ -49,7 +72,6 @@ function update_info() {
         
         let timer_slider = document.getElementById(\"timer_slider\");
         timer_slider.setAttribute(\"max\", duration);
-        //timer_slider.setAttribute(\"value\", elapsed);
         timer_slider.value = elapsed;
 
         let queue_element = document.getElementById(\"queue\");
@@ -93,7 +115,22 @@ function next_song() {
     }).then((body) => {update_info();});
 }
 
+function get_all_songs() {
+    fetch(\"/allsongs\").then((response) => response.text()).then((songs) => {
+        let song_list = JSON.parse(songs);
+        let song_div = document.getElementById(\"all_songs\");
+        song_div.innerHTML = \"\";
+        for (let i = 0; i < song_list.length; i++) {
+            let song = song_list[i];
+            let song_p = document.createElement(\"p\");
+            song_p.appendChild(document.createTextNode(song[\"artist\"] + \" -- \" + song[\"title\"]));
+            song_div.appendChild(song_p);
+        }
+    })
+}
+
 window.onload = function() {
+    get_all_songs();
     update_info();
     window.setInterval(update_info, 1000);
 };";

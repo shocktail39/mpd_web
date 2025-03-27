@@ -83,6 +83,34 @@ fn response_update(current_song: &Option<Song>, queue: &Vec<Song>, status: &Stat
     }), "application/json")
 }
 
+fn response_all_songs(mut mpd: Client) -> mpd::error::Result<String> {
+    // i would much prefer to just pass in the vec of songs instead of the whole mpd client,
+    // but listall doesn't properly return metadata, only file names,
+    // so we gotta get a bit wacky.
+    let song_file_names = mpd.listall()?;
+    let mut song_list = json::JsonValue::new_array();
+    for song in song_file_names {
+        let song_with_info = &mpd.lsinfo(song.clone())?[0];
+        let title = if let Some(t) = &song_with_info.title {
+            t
+        } else {
+            "Other"
+        };
+        let artist = if let Some(a) = &song_with_info.artist {
+            a
+        } else {
+            "Other"
+        };
+        let file = song.file.clone();
+        song_list.push(json::object! {
+            file: file,
+            title: title,
+            artist: artist
+        });
+    }
+    Ok(response_200_ok(&json::stringify(song_list), "application/json"))
+}
+
 fn handle_get(head: &str) -> mpd::error::Result<String> {
     let (path, _) = head[4..].split_once(" ").unwrap_or(("", ""));
     match path {
@@ -98,6 +126,10 @@ fn handle_get(head: &str) -> mpd::error::Result<String> {
         "/update" => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
             Ok(response_update(&mpd.currentsong()?, &mpd.queue()?, &mpd.status()?))
+        }
+        "/allsongs" => {
+            let mpd = Client::connect(config::MPD_ADDRESS)?;
+            response_all_songs(mpd)
         }
         _ => {
             Ok(response_404_not_found())
