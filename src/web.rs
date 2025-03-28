@@ -88,22 +88,22 @@ fn response_all_songs(mut mpd: Client) -> mpd::error::Result<String> {
 }
 
 fn handle_get(head: &str) -> mpd::error::Result<String> {
-    let (path, _) = head[4..].split_once(" ").unwrap_or(("", ""));
-    match path {
-        "/" => {
+    let path_split = head[4..].split_once(" ");
+    match path_split {
+        Some(("/", _)) => {
             Ok(response::ok(static_resources::CONTROL_PANEL, "text/html"))
         }
-        "/style.css" => {
+        Some(("/style.css", _)) => {
             Ok(response::ok(static_resources::STYLE, "text/css"))
         }
-        "/script.js" => {
+        Some(("/script.js", _)) => {
             Ok(response::ok(static_resources::SCRIPT, "text/javascript"))
         }
-        "/update" => {
+        Some(("/update", _)) => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
             Ok(response_update(&mpd.currentsong()?, &mpd.queue()?, &mpd.status()?))
         }
-        "/allsongs" => {
+        Some(("/allsongs", _)) => {
             let mpd = Client::connect(config::MPD_ADDRESS)?;
             response_all_songs(mpd)
         }
@@ -114,9 +114,15 @@ fn handle_get(head: &str) -> mpd::error::Result<String> {
 }
 
 fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
-    let (path, _) = head[5..].split_once(" ").unwrap_or(("", ""));
-    match path {
-        "/seek" => {
+    let path_split = head[5..].split_once(" ");
+    match path_split {
+        Some(("/addsong", _)) => {
+            let mut mpd = Client::connect(config::MPD_ADDRESS)?;
+            let mut query = mpd::Query::new();
+            mpd.findadd(query.and(mpd::Term::File, std::borrow::Cow::from(body)))?;
+            Ok(response::ok_no_content())
+        }
+        Some(("/seek", _)) => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
             if let Ok(where_to) = body.trim().parse::<f64>() {
                 mpd.rewind(where_to)?;
@@ -128,7 +134,7 @@ fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
             }
             Ok(response::ok_no_content())
         }
-        "/prev" => {
+        Some(("/prev", _)) => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
             mpd.prev()?;
             // workaround for freeze on skip
@@ -136,7 +142,7 @@ fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
             mpd.play()?;
             Ok(response::ok_no_content())
         }
-        "/pause" => {
+        Some(("/pause", _)) => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
             if mpd.status()?.state == State::Stop {
                 mpd.play()?;
@@ -145,7 +151,7 @@ fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
             }
             Ok(response::ok_no_content())
         }
-        "/next" => {
+        Some(("/next", _)) => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
             mpd.next()?;
             // workaround for freeze on skip
@@ -160,10 +166,10 @@ fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
 }
 
 pub fn handle_request(head: &str, body: &str) -> mpd::error::Result<String> {
-    let (method, _) = head.split_once(" ").unwrap_or(("", ""));
-    match method {
-        "GET" => handle_get(head),
-        "POST" => handle_post(head, body),
+    let method_split = head.split_once(" ");
+    match method_split {
+        Some(("GET", _)) => handle_get(head),
+        Some(("POST", _)) => handle_post(head, body),
         _ => Ok(response::error("405 Method Not Allowed"))
     }
 }

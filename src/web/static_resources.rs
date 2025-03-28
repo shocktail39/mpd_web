@@ -124,6 +124,14 @@ function next_song() {
     }).then((body) => {update_info();});
 }
 
+function add_to_queue(file) {
+    fetch(\"/addsong\", {
+        method: \"POST\",
+        headers: {\"Content-Type\": \"text/plain\"},
+        body: file
+    }).then((body) => {update_info();});
+}
+
 function get_all_songs() {
     fetch(\"/allsongs\").then((response) => response.text()).then((songs) => {
         let song_list = JSON.parse(songs);
@@ -131,8 +139,12 @@ function get_all_songs() {
         song_div.innerHTML = \"\";
         for (let i = 0; i < song_list.length; i++) {
             let song = song_list[i];
+            let queue_button = document.createElement(\"input\");
+            queue_button.setAttribute(\"type\", \"button\");
+            queue_button.setAttribute(\"value\", song[\"artist\"] + \" -- \" + song[\"title\"]);
+            queue_button.onclick = function() {add_to_queue(song[\"file\"]);};
             let song_p = document.createElement(\"p\");
-            song_p.appendChild(document.createTextNode(song[\"artist\"] + \" -- \" + song[\"title\"]));
+            song_p.appendChild(queue_button);
             song_div.appendChild(song_p);
         }
     })
