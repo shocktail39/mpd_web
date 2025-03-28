@@ -7,41 +7,50 @@ pub const CONTROL_PANEL: &str = "<!DOCTYPE html>
     </head>
     <body>
         <div id=\"all_songs\"></div>
-        <div id=\"controls\">
-            <h1 id=\"now_playing\"></h1>
-            <input id=\"timer_slider\" type=\"range\" oninput=\"seek_time();\" />
-            <h3 id=\"timer_text\"></h3>
-            <input type=\"button\" value=\"prev\" onclick=\"prev_song();\" />
-            <input type=\"button\" value=\"pause\" onclick=\"toggle_pause();\" />
-            <input type=\"button\" value=\"next\" onclick=\"next_song();\" />
-            <h2>queue:</h2>
-            <ol id=\"queue\"></ol>
+        <div id=\"right_side\">
+            <div id=\"controls\">
+                <h1 id=\"now_playing\"></h1>
+                <input id=\"timer_slider\" type=\"range\" oninput=\"seek_time();\" />
+                <h3 id=\"timer_text\"></h3>
+                <input type=\"button\" value=\"prev\" onclick=\"prev_song();\" />
+                <input type=\"button\" value=\"pause\" onclick=\"toggle_pause();\" />
+                <input type=\"button\" value=\"next\" onclick=\"next_song();\" />
+            </div>
+            <div id=\"queue_div\">
+                <h2>queue</h2>
+                <ol id=\"queue\"></ol>
+            </div>
         </div>
     </body>
 </html>";
 
-pub const STYLE: &str = ".current_song {
-    font-weight: bold;
+pub const STYLE: &str = "body {
+    height: 100vh;
+    display: flex;
+    margin: 0;
 }
 
 #all_songs {
-    position: fixed;
-    top: 0%;
-    left: 0%;
-    width: 15%;
-    height: 100%;
-    overflow: scroll;
+    overflow-y: scroll;
     border-right: solid 1px black;
 }
 
+#right_side {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 32;
+}
+
 #controls {
-    position: fixed;
-    top: 0%;
-    left: 15%;
-    width: 85%;
-    height: 100%;
-    overflow: scroll;
-    margin-left: 8px;
+    border-bottom: solid 1px black;
+}
+
+#queue_div {
+    overflow-y: scroll;
+}
+
+.current_song {
+    font-weight: bold;
 }
 
 #timer_slider {
