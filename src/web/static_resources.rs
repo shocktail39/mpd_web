@@ -57,7 +57,14 @@ pub const STYLE: &str = "body {
     width: 100%;
 }";
 
-pub const SCRIPT: &str = "function to_timer(seconds) {
+pub const SCRIPT: &str = "function song_obj_to_string(song) {
+    if (song == null) {
+        return \"nothing\";
+    }
+    return song[\"artist\"] + \" -- \" + song[\"title\"];
+}
+
+function to_timer(seconds) {
     let mins = Math.floor(seconds / 60);
     if (mins < 10) {
         mins = \"0\" + mins;
@@ -73,7 +80,7 @@ function update_info() {
     fetch(\"/update\").then((response) => response.text()).then((json_response) => {
         let response_as_object = JSON.parse(json_response);
 
-        document.getElementById(\"now_playing\").textContent = \"now playing: \" + response_as_object[\"now_playing\"];
+        document.getElementById(\"now_playing\").textContent = \"now playing: \" + song_obj_to_string(response_as_object[\"now_playing\"]);
 
         let elapsed = response_as_object[\"elapsed\"];
         let duration = response_as_object[\"duration\"];
@@ -88,10 +95,18 @@ function update_info() {
         let queue_array = response_as_object[\"queue\"];
         for (let i = 0; i < queue_array.length; i++) {
             let list_item = document.createElement(\"li\");
-            list_item.appendChild(document.createTextNode(queue_array[i]));
+
+            let remove_button = document.createElement(\"input\");
+            remove_button.setAttribute(\"type\", \"button\");
+            remove_button.setAttribute(\"value\", \"x\");
+            remove_button.onclick = function() {remove_from_queue(i)};
+            list_item.appendChild(remove_button);
+
+            list_item.appendChild(document.createTextNode(song_obj_to_string(queue_array[i])));
             if (response_as_object[\"queue_pos\"] == i) {
                 list_item.className = \"current_song\";
             }
+
             queue_element.appendChild(list_item);
         }
     });
@@ -132,6 +147,14 @@ function add_to_queue(file) {
     }).then((body) => {update_info();});
 }
 
+function remove_from_queue(position) {
+    fetch(\"/removesong\", {
+        method: \"POST\",
+        headers: {\"Content-Type\": \"text/plain\"},
+        body: position
+    }).then((body) => {update_info();});
+}
+
 function get_all_songs() {
     fetch(\"/allsongs\").then((response) => response.text()).then((songs) => {
         let song_list = JSON.parse(songs);
@@ -141,7 +164,7 @@ function get_all_songs() {
             let song = song_list[i];
             let queue_button = document.createElement(\"input\");
             queue_button.setAttribute(\"type\", \"button\");
-            queue_button.setAttribute(\"value\", song[\"artist\"] + \" -- \" + song[\"title\"]);
+            queue_button.setAttribute(\"value\", song_obj_to_string(song));
             queue_button.onclick = function() {add_to_queue(song[\"file\"]);};
             let song_p = document.createElement(\"p\");
             song_p.appendChild(queue_button);

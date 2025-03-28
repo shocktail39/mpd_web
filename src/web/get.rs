@@ -3,33 +3,34 @@ use crate::web::{response, static_resources};
 use mpd::{Client, Song};
 use mpd::error::Result;
 
-fn song_string(song: &Song) -> String {
-    let mut to_return = if let Some(title) = &song.title {
-        title
+fn song_to_json(song: &Song) -> json::JsonValue {
+    let file = song.file.as_str();
+    let title = if let Some(t) = &song.title {
+        t.as_str()
     } else {
-        &song.file
-    }.clone();
-    if let Some(artist) = &song.artist {
-        to_return.push_str(" by ");
-        to_return.push_str(artist);
+        file
+    };
+    let artist = if let Some(a) = &song.artist {
+        a.as_str()
+    } else {
+        "Other"
+    };
+    json::object! {
+        file: file,
+        title: title,
+        artist: artist
     }
-    to_return
 }
 
 fn response_update() -> Result<String> {
     let mut mpd = Client::connect(MPD_ADDRESS)?;
     let current_song = mpd.currentsong()?;
-    let now_playing_string = if let Some(song) = current_song {
-        &song_string(&song)
-    } else {
-        "nothing"
-    };
-
+    let now_playing = current_song.map(|song| song_to_json(&song));
     let queue = mpd.queue()?;
     let queue_strings = {
         let mut qs = vec![];
         for song in queue {
-            qs.push(song_string(&song));
+            qs.push(song_to_json(&song));
         }
         qs
     };
@@ -54,7 +55,7 @@ fn response_update() -> Result<String> {
     };
 
     Ok(response::ok(&json::stringify(json::object! {
-        now_playing: now_playing_string,
+        now_playing: now_playing,
         queue: queue_strings,
         queue_pos: queue_pos,
         elapsed: current_song_elapsed_time,

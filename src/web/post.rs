@@ -4,16 +4,24 @@ use mpd::{Client, State, Term, Query};
 use mpd::error::Result;
 use std::borrow::Cow;
 
-fn add_song(body: &str) -> Result<String> {
+fn add_song(filename: &str) -> Result<String> {
     let mut mpd = Client::connect(MPD_ADDRESS)?;
     let mut query = Query::new();
-    mpd.findadd(query.and(Term::File, Cow::from(body)))?;
+    mpd.findadd(query.and(Term::File, Cow::from(filename)))?;
     Ok(response::ok_no_content())
 }
 
-fn seek(body: &str) -> Result<String> {
+fn remove_song(position_str: &str) -> Result<String> {
     let mut mpd = Client::connect(MPD_ADDRESS)?;
-    if let Ok(where_to) = body.trim().parse::<f64>() {
+    if let Ok(position) = position_str.parse::<u32>() {
+        mpd.delete(position)?;
+    };
+    Ok(response::ok_no_content())
+}
+
+fn seek(time_str: &str) -> Result<String> {
+    let mut mpd = Client::connect(MPD_ADDRESS)?;
+    if let Ok(where_to) = time_str.trim().parse::<f64>() {
         mpd.rewind(where_to)?;
     }
     // workaround for freeze on skip
@@ -56,6 +64,7 @@ pub fn handle(head: &str, body: &str) -> Result<String> {
     let path_split = head[5..].split_once(" ");
     match path_split {
         Some(("/addsong", _)) => add_song(body),
+        Some(("/removesong", _)) => remove_song(body),
         Some(("/seek", _)) => seek(body),
         Some(("/prev", _)) => previous_song(),
         Some(("/pause", _)) => pause(),
