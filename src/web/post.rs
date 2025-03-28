@@ -60,7 +60,8 @@ pub fn handle(head: &str, body: &str) -> Result<String> {
         Some(("/prev", _)) => previous_song(),
         Some(("/pause", _)) => pause(),
         Some(("/next", _)) => next_song(),
-        _ => Ok(response::error("404 Not Found"))
+        Some(_) => Ok(response::error("404 Not Found")),
+        None => Ok(response::error("400 Bad Request"))
     }
 }
 

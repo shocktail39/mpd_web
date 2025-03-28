@@ -96,7 +96,8 @@ pub fn handle(head: &str) -> Result<String> {
         Some(("/script.js", _)) => Ok(response::ok(static_resources::SCRIPT, "text/javascript")),
         Some(("/update", _)) => response_update(),
         Some(("/allsongs", _)) => response_all_songs(),
-        _ => Ok(response::error("404 Not Found"))
+        Some(_) => Ok(response::error("404 Not Found")),
+        None => Ok(response::error("400 Bad Request"))
     }
 }
 
