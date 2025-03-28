@@ -88,9 +88,9 @@ fn response_all_songs(mut mpd: Client) -> mpd::error::Result<String> {
     // but listall doesn't properly return metadata, only file names,
     // so we gotta get a bit wacky.
     let song_file_names = mpd.listall()?;
-    let mut song_list = json::JsonValue::new_array();
+    let mut song_list = vec![];
     for song in song_file_names {
-        let song_with_info = &mpd.lsinfo(song.clone())?[0];
+        let song_with_info = &mpd.lsinfo(song)?[0];
         let title = if let Some(t) = &song_with_info.title {
             t
         } else {
@@ -101,7 +101,7 @@ fn response_all_songs(mut mpd: Client) -> mpd::error::Result<String> {
         } else {
             "Other"
         };
-        let file = song.file.clone();
+        let file = song_with_info.file.as_str();
         song_list.push(json::object! {
             file: file,
             title: title,
