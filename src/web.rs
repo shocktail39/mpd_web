@@ -1,7 +1,8 @@
 use crate::config;
 use mpd::{Client, Song, State, Status};
 
-pub mod static_resources;
+mod static_resources;
+mod response;
 
 fn song_string(song: &Song) -> String {
     let mut to_return = if let Some(title) = &song.title {
@@ -14,31 +15,6 @@ fn song_string(song: &Song) -> String {
         to_return.push_str(artist);
     }
     to_return
-}
-
-fn response_404_not_found() -> String {
-   let head = format!("HTTP/1.1 404 Not Found\r\nContent-Type: text/html\r\nContent-Length:{}\r\nConnection: close\r\n\r\n", static_resources::NOT_FOUND.len());
-   let mut response = head;
-   response.push_str(static_resources::NOT_FOUND);
-   response
-}
-
-fn response_405_method_not_allowed() -> String {
-   let head = format!("HTTP/1.1 405 Method Not Allowed\r\nContent-Type: text/html\r\nContent-Length:{}\r\nConnection: close\r\n\r\n", static_resources::METHOD_NOT_ALLOWED.len());
-   let mut response = head;
-   response.push_str(static_resources::METHOD_NOT_ALLOWED);
-   response
-}
-
-fn response_200_ok(body: &str, mime_type: &str) -> String {
-    let head = format!("HTTP/1.1 200 OK\r\nContent-Type: {}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", mime_type, body.len());
-    let mut response = head;
-    response.push_str(body);
-    response
-}
-
-fn response_empty() -> String {
-    response_200_ok("", "text/plain")
 }
 
 fn response_update(current_song: &Option<Song>, queue: &Vec<Song>, status: &Status) -> String {
@@ -74,7 +50,7 @@ fn response_update(current_song: &Option<Song>, queue: &Vec<Song>, status: &Stat
         0
     };
 
-    response_200_ok(&json::stringify(json::object! {
+    response::ok(&json::stringify(json::object! {
         now_playing: now_playing_string,
         queue: queue_strings,
         queue_pos: queue_pos,
@@ -108,20 +84,20 @@ fn response_all_songs(mut mpd: Client) -> mpd::error::Result<String> {
             artist: artist
         });
     }
-    Ok(response_200_ok(&json::stringify(song_list), "application/json"))
+    Ok(response::ok(&json::stringify(song_list), "application/json"))
 }
 
 fn handle_get(head: &str) -> mpd::error::Result<String> {
     let (path, _) = head[4..].split_once(" ").unwrap_or(("", ""));
     match path {
         "/" => {
-            Ok(response_200_ok(static_resources::CONTROL_PANEL, "text/html"))
+            Ok(response::ok(static_resources::CONTROL_PANEL, "text/html"))
         }
         "/style.css" => {
-            Ok(response_200_ok(static_resources::STYLE, "text/css"))
+            Ok(response::ok(static_resources::STYLE, "text/css"))
         }
         "/script.js" => {
-            Ok(response_200_ok(static_resources::SCRIPT, "text/javascript"))
+            Ok(response::ok(static_resources::SCRIPT, "text/javascript"))
         }
         "/update" => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
@@ -132,7 +108,7 @@ fn handle_get(head: &str) -> mpd::error::Result<String> {
             response_all_songs(mpd)
         }
         _ => {
-            Ok(response_404_not_found())
+            Ok(response::error("404 Not Found"))
         }
     }
 }
@@ -150,7 +126,7 @@ fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
                 mpd.pause(true)?;
                 mpd.play()?;
             }
-            Ok(response_empty())
+            Ok(response::ok_no_content())
         }
         "/prev" => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
@@ -158,7 +134,7 @@ fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
             // workaround for freeze on skip
             mpd.pause(true)?;
             mpd.play()?;
-            Ok(response_empty())
+            Ok(response::ok_no_content())
         }
         "/pause" => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
@@ -167,7 +143,7 @@ fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
             } else {
                 mpd.toggle_pause()?;
             }
-            Ok(response_empty())
+            Ok(response::ok_no_content())
         }
         "/next" => {
             let mut mpd = Client::connect(config::MPD_ADDRESS)?;
@@ -175,10 +151,10 @@ fn handle_post(head: &str, body: &str) -> mpd::error::Result<String> {
             // workaround for freeze on skip
             mpd.pause(true)?;
             mpd.play()?;
-            Ok(response_empty())
+            Ok(response::ok_no_content())
         }
         _ => {
-            Ok(response_404_not_found())
+            Ok(response::error("404 Not Found"))
         }
     }
 }
@@ -188,7 +164,7 @@ pub fn handle_request(head: &str, body: &str) -> mpd::error::Result<String> {
     match method {
         "GET" => handle_get(head),
         "POST" => handle_post(head, body),
-        _ => Ok(response_405_method_not_allowed())
+        _ => Ok(response::error("405 Method Not Allowed"))
     }
 }
 

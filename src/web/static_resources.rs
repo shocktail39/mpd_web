@@ -135,23 +135,3 @@ window.onload = function() {
     window.setInterval(update_info, 1000);
 };";
 
-pub const NOT_FOUND: &str = "<!DOCTYPE html>
-<html>
-    <head>
-        <title>404 Not Found</title>
-    </head>
-    <body>
-        <h1>404 Not Found</h1>
-    </body>
-</html>";
-
-pub const METHOD_NOT_ALLOWED: &str = "<!DOCTYPE html>
-<html>
-    <head>
-        <title>405 Method Not Allowed</title>
-    </head>
-    <body>
-        <h1>405 Method Not Allowed</h1>
-    </body>
-</html>";
-
