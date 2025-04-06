@@ -57,7 +57,9 @@ pub const STYLE: &str = "body {
     width: 100%;
 }";
 
-pub const SCRIPT: &str = "function song_obj_to_string(song) {
+pub const SCRIPT: &str = "let now_playing_name = \"\";
+
+function song_obj_to_string(song) {
     if (song == null) {
         return \"nothing\";
     }
@@ -76,19 +78,9 @@ function to_timer(seconds) {
     return mins + \":\" + secs;
 }
 
-function update_info() {
-    fetch(\"/update\").then((response) => response.text()).then((json_response) => {
+function update_queue() {
+    fetch(\"/queue\").then((response) => response.text()).then((json_response) => {
         let response_as_object = JSON.parse(json_response);
-
-        document.getElementById(\"now_playing\").textContent = \"now playing: \" + song_obj_to_string(response_as_object[\"now_playing\"]);
-
-        let elapsed = response_as_object[\"elapsed\"];
-        let duration = response_as_object[\"duration\"];
-        document.getElementById(\"timer_text\").textContent = to_timer(elapsed) + \"/\" + to_timer(duration);
-        
-        let timer_slider = document.getElementById(\"timer_slider\");
-        timer_slider.setAttribute(\"max\", duration);
-        timer_slider.value = elapsed;
 
         let queue_element = document.getElementById(\"queue\");
         queue_element.innerHTML = \"\";
@@ -112,31 +104,57 @@ function update_info() {
     });
 }
 
+function update_now_playing() {
+    fetch(\"/nowplaying\").then((response) => response.text()).then((json_response) => {
+        let response_as_object = JSON.parse(json_response);
+
+        let np = song_obj_to_string(response_as_object[\"now_playing\"]);
+        document.getElementById(\"now_playing\").textContent = \"now playing: \" + np;
+        if (np != now_playing_name) {
+            now_playing_name = np;
+            update_queue();
+        }
+
+        let elapsed = response_as_object[\"elapsed\"];
+        let duration = response_as_object[\"duration\"];
+        document.getElementById(\"timer_text\").textContent = to_timer(elapsed) + \"/\" + to_timer(duration);
+        
+        let timer_slider = document.getElementById(\"timer_slider\");
+        timer_slider.setAttribute(\"max\", duration);
+        timer_slider.value = elapsed;
+    });
+}
+
+function update_right_side() {
+    update_queue();
+    update_now_playing();
+}
+
 function seek_time() {
     let time_to_go_to = document.getElementById(\"timer_slider\").value;
     fetch(\"/seek\", {
         method: \"POST\",
         headers: {\"Content-Type\": \"text/plain\"},
         body: time_to_go_to
-    }).then((body) => {update_info();});
+    }).then((body) => {update_now_playing();});
 }
 
 function prev_song() {
     fetch(\"/prev\", {
         method: \"POST\"
-    }).then((body) => {update_info();});
+    }).then((body) => {update_now_playing();});
 }
 
 function toggle_pause() {
     fetch(\"/pause\", {
         method: \"POST\"
-    }).then((body) => {update_info();});
+    }).then((body) => {update_now_playing();});
 }
 
 function next_song() {
     fetch(\"/next\", {
         method: \"POST\"
-    }).then((body) => {update_info();});
+    }).then((body) => {update_now_playing();});
 }
 
 function add_to_queue(file) {
@@ -144,7 +162,7 @@ function add_to_queue(file) {
         method: \"POST\",
         headers: {\"Content-Type\": \"text/plain\"},
         body: file
-    }).then((body) => {update_info();});
+    }).then((body) => {update_queue();});
 }
 
 function remove_from_queue(position) {
@@ -152,7 +170,7 @@ function remove_from_queue(position) {
         method: \"POST\",
         headers: {\"Content-Type\": \"text/plain\"},
         body: position
-    }).then((body) => {update_info();});
+    }).then((body) => {update_queue();});
 }
 
 function get_all_songs() {
@@ -175,7 +193,7 @@ function get_all_songs() {
 
 window.onload = function() {
     get_all_songs();
-    update_info();
-    window.setInterval(update_info, 1000);
+    update_right_side();
+    window.setInterval(update_now_playing, 1000);
 };";
 

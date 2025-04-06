@@ -22,12 +22,10 @@ fn song_to_json(song: &Song) -> json::JsonValue {
     }
 }
 
-fn response_update() -> Result<String> {
+fn queue() -> Result<String> {
     let mut mpd = Client::connect(MPD_ADDRESS)?;
-    let current_song = mpd.currentsong()?;
-    let now_playing = current_song.map(|song| song_to_json(&song));
     let queue = mpd.queue()?;
-    let queue_strings = {
+    let queue_objects = {
         let mut qs = vec![];
         for song in queue {
             qs.push(song_to_json(&song));
@@ -42,6 +40,18 @@ fn response_update() -> Result<String> {
         0
     };
 
+    Ok(response::ok(&json::stringify(json::object! {
+        queue: queue_objects,
+        queue_pos: queue_pos
+    }), "application/json"))
+}
+
+fn now_playing() -> Result<String> {
+    let mut mpd = Client::connect(MPD_ADDRESS)?;
+    let current_song = mpd.currentsong()?;
+    let now_playing = current_song.map(|song| song_to_json(&song));
+
+    let status = mpd.status()?;
     let current_song_elapsed_time = if let Some(duration) = status.elapsed {
         duration.as_secs()
     } else {
@@ -56,8 +66,6 @@ fn response_update() -> Result<String> {
 
     Ok(response::ok(&json::stringify(json::object! {
         now_playing: now_playing,
-        queue: queue_strings,
-        queue_pos: queue_pos,
         elapsed: current_song_elapsed_time,
         duration: current_song_duration
     }), "application/json"))
@@ -95,7 +103,8 @@ pub fn handle(head: &str) -> Result<String> {
         Some(("/", _)) => Ok(response::ok(static_resources::CONTROL_PANEL, "text/html")),
         Some(("/style.css", _)) => Ok(response::ok(static_resources::STYLE, "text/css")),
         Some(("/script.js", _)) => Ok(response::ok(static_resources::SCRIPT, "text/javascript")),
-        Some(("/update", _)) => response_update(),
+        Some(("/queue", _)) => queue(),
+        Some(("/nowplaying", _)) => now_playing(),
         Some(("/allsongs", _)) => response_all_songs(),
         Some(_) => Ok(response::error("404 Not Found")),
         None => Ok(response::error("400 Bad Request"))

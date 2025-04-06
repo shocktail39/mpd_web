@@ -16,6 +16,11 @@ fn remove_song(position_str: &str) -> Result<String> {
     if let Ok(position) = position_str.parse::<u32>() {
         mpd.delete(position)?;
     };
+    // workaround for freeze on skip
+    if mpd.status()?.state == State::Play {
+        mpd.pause(true)?;
+        mpd.play()?;
+    }
     Ok(response::ok_no_content())
 }
 
