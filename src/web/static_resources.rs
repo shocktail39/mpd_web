@@ -13,7 +13,7 @@ pub const CONTROL_PANEL: &str = "<!DOCTYPE html>
                 <input id=\"timer_slider\" type=\"range\" oninput=\"seek_time();\" />
                 <h3 id=\"timer_text\"></h3>
                 <input type=\"button\" value=\"prev\" onclick=\"prev_song();\" />
-                <input type=\"button\" value=\"pause\" onclick=\"toggle_pause();\" />
+                <button type=\"button\" class=\"control\" onclick=\"toggle_pause();\"><img src=\"/pause.svg\" /></button>
                 <input type=\"button\" value=\"next\" onclick=\"next_song();\" />
             </div>
             <div id=\"queue_div\">
@@ -25,9 +25,17 @@ pub const CONTROL_PANEL: &str = "<!DOCTYPE html>
 </html>";
 
 pub const STYLE: &str = "body {
+    background-color: #306;
+    color: #f0c;
     height: 100vh;
     display: flex;
     margin: 0;
+}
+
+.control {
+    background: none;
+    border: none;
+    padding: 0;
 }
 
 #all_songs {
@@ -109,7 +117,9 @@ function update_now_playing() {
         let response_as_object = JSON.parse(json_response);
 
         let np = song_obj_to_string(response_as_object[\"now_playing\"]);
-        document.getElementById(\"now_playing\").textContent = \"now playing: \" + np;
+        let now_playing_message = \"now playing \" + np;
+        document.getElementById(\"now_playing\").textContent = now_playing_message;
+        document.title = now_playing_message;
         if (np != now_playing_name) {
             now_playing_name = np;
             update_queue();
@@ -196,4 +206,20 @@ window.onload = function() {
     update_right_side();
     window.setInterval(update_now_playing, 1000);
 };";
+
+pub const PAUSE_SVG: &str = "<?xml version=\"1.0\" standalone=\"no\"?>
+<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
+<!-- Created using Krita: https://krita.org -->
+<svg xmlns=\"http://www.w3.org/2000/svg\" 
+    xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+    xmlns:krita=\"http://krita.org/namespaces/svg/krita\"
+    xmlns:sodipodi=\"http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd\"
+    width=\"23.04pt\"
+    height=\"23.04pt\"
+    viewBox=\"0 0 23.04 23.04\">
+<defs/>
+<rect id=\"shape0\" fill=\"#330066\" fill-rule=\"evenodd\" width=\"23.04\" height=\"23.04\"/>
+<rect id=\"shape1\" transform=\"translate(2.88, 2.88)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" width=\"7.2\" height=\"17.28\"/>
+<rect id=\"shape2\" transform=\"translate(12.96, 2.88)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" width=\"7.2\" height=\"17.28\"/>
+</svg>";
 

@@ -103,6 +103,7 @@ pub fn handle(head: &str) -> Result<String> {
         Some(("/", _)) => Ok(response::ok(static_resources::CONTROL_PANEL, "text/html")),
         Some(("/style.css", _)) => Ok(response::ok(static_resources::STYLE, "text/css")),
         Some(("/script.js", _)) => Ok(response::ok(static_resources::SCRIPT, "text/javascript")),
+        Some(("/pause.svg", _)) => Ok(response::ok(static_resources::PAUSE_SVG, "image/svg+xml")),
         Some(("/queue", _)) => queue(),
         Some(("/nowplaying", _)) => now_playing(),
         Some(("/allsongs", _)) => response_all_songs(),
