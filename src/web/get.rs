@@ -52,19 +52,9 @@ fn now_playing() -> Result<String> {
     let now_playing = current_song.map(|song| song_to_json(&song));
 
     let status = mpd.status()?;
-    let current_song_elapsed_time = if let Some(duration) = status.elapsed {
-        duration.as_secs()
-    } else {
-        0
-    };
-
-    let current_song_duration = if let Some(duration) = status.duration {
-        duration.as_secs()
-    } else {
-        0
-    };
-
-    let is_playing = mpd.status()?.state == State::Play;
+    let current_song_elapsed_time = status.elapsed.map_or(0, |duration| duration.as_secs());
+    let current_song_duration = status.duration.map_or(0, |duration| duration.as_secs());
+    let is_playing = status.state == State::Play;
 
     Ok(response::ok(&json::stringify(json::object! {
         now_playing: now_playing,
@@ -79,23 +69,10 @@ fn all_songs() -> Result<String> {
     let song_file_names = mpd.listall()?;
     let mut song_list = vec![];
     for song in song_file_names {
+        // listall only gives file names, not info such as title or artist,
+        // so we gotta query each file individually.
         let song_with_info = &mpd.lsinfo(song)?[0];
-        let title = if let Some(t) = &song_with_info.title {
-            t
-        } else {
-            "Other"
-        };
-        let artist = if let Some(a) = &song_with_info.artist {
-            a
-        } else {
-            "Other"
-        };
-        let file = song_with_info.file.as_str();
-        song_list.push(json::object! {
-            file: file,
-            title: title,
-            artist: artist
-        });
+        song_list.push(song_to_json(song_with_info));
     }
     Ok(response::ok(&json::stringify(song_list), mime_types::JSON))
 }
