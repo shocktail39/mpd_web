@@ -1,6 +1,6 @@
 use crate::config::MPD_ADDRESS;
 use crate::web::{response, static_resources};
-use mpd::{Client, Song};
+use mpd::{Client, Song, State};
 use mpd::error::Result;
 
 fn song_to_json(song: &Song) -> json::JsonValue {
@@ -64,10 +64,13 @@ fn now_playing() -> Result<String> {
         0
     };
 
+    let is_playing = mpd.status()?.state == State::Play;
+
     Ok(response::ok(&json::stringify(json::object! {
         now_playing: now_playing,
         elapsed: current_song_elapsed_time,
-        duration: current_song_duration
+        duration: current_song_duration,
+        is_playing: is_playing
     }), "application/json"))
 }
 
@@ -105,6 +108,7 @@ pub fn handle(head: &str) -> Result<String> {
         Some(("/script.js", _)) => Ok(response::ok(static_resources::SCRIPT, "text/javascript")),
         Some(("/prev.svg", _)) => Ok(response::ok(static_resources::PREV_SVG, "image/svg+xml")),
         Some(("/pause.svg", _)) => Ok(response::ok(static_resources::PAUSE_SVG, "image/svg+xml")),
+        Some(("/play.svg", _)) => Ok(response::ok(static_resources::PLAY_SVG, "image/svg+xml")),
         Some(("/next.svg", _)) => Ok(response::ok(static_resources::NEXT_SVG, "image/svg+xml")),
         Some(("/queue", _)) => queue(),
         Some(("/nowplaying", _)) => now_playing(),

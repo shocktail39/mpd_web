@@ -13,7 +13,7 @@ pub const CONTROL_PANEL: &str = "<!DOCTYPE html>
                 <input id=\"timer_slider\" type=\"range\" oninput=\"seek_time();\" />
                 <h3 id=\"timer_text\"></h3>
                 <button type=\"button\" class=\"control\" onclick=\"prev_song();\"><img src=\"/prev.svg\" /></button>
-                <button type=\"button\" class=\"control\" onclick=\"toggle_pause();\"><img src=\"/pause.svg\" /></button>
+                <button type=\"button\" class=\"control\" onclick=\"toggle_pause();\"><img id=\"pause_button_image\" src=\"/play.svg\" /></button>
                 <button type=\"button\" class=\"control\" onclick=\"next_song();\"><img src=\"/next.svg\" /></button>
             </div>
             <div id=\"queue_div\">
@@ -66,7 +66,9 @@ pub const STYLE: &str = "body {
     width: 100%;
 }";
 
-pub const SCRIPT: &str = "let now_playing_name = \"\";
+pub const SCRIPT: &str = "\"use strict\";
+
+let now_playing_name = \"\";
 
 function song_obj_to_string(song) {
     if (song == null) {
@@ -133,6 +135,8 @@ function update_now_playing() {
         let timer_slider = document.getElementById(\"timer_slider\");
         timer_slider.setAttribute(\"max\", duration);
         timer_slider.value = elapsed;
+
+        document.getElementById(\"pause_button_image\").src = response_as_object[\"is_playing\"] ? \"/pause.svg\" : \"/play.svg\";
     });
 }
 
@@ -212,44 +216,46 @@ pub const PREV_SVG: &str = "<?xml version=\"1.0\" standalone=\"no\"?>
 <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
 <!-- Created using Krita: https://krita.org -->
 <svg xmlns=\"http://www.w3.org/2000/svg\" 
-    xmlns:xlink=\"http://www.w3.org/1999/xlink\"
-    xmlns:krita=\"http://krita.org/namespaces/svg/krita\"
-    xmlns:sodipodi=\"http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd\"
     width=\"32pt\"
     height=\"32pt\"
     viewBox=\"0 0 32 32\">
 <defs/>
-<path id=\"shape0\" transform=\"translate(16, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 16 0 L 16 32 L 0 16 L 16 0\" sodipodi:nodetypes=\"cccc\"/>
-<path id=\"shape1\" fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 16 0 L 16 32 L 0 16 L 16 0\" sodipodi:nodetypes=\"cccc\"/>
+<path transform=\"translate(16, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 16 0 L 16 32 L 0 16 L 16 0\"/>
+<path fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 16 0 L 16 32 L 0 16 L 16 0\"/>
 </svg>";
 
 pub const PAUSE_SVG: &str = "<?xml version=\"1.0\" standalone=\"no\"?>
 <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
 <!-- Created using Krita: https://krita.org -->
 <svg xmlns=\"http://www.w3.org/2000/svg\"
-    xmlns:xlink=\"http://www.w3.org/1999/xlink\"
-    xmlns:krita=\"http://krita.org/namespaces/svg/krita\"
-    xmlns:sodipodi=\"http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd\"
     width=\"32pt\"
     height=\"32pt\"
     viewBox=\"0 0 32 32\">
 <defs/>
-<rect id=\"shape1\" transform=\"translate(0, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" width=\"12\" height=\"32\"/>
-<rect id=\"shape2\" transform=\"translate(20, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" width=\"12\" height=\"32\"/>
+<rect transform=\"translate(0, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" width=\"12\" height=\"32\"/>
+<rect transform=\"translate(20, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" width=\"12\" height=\"32\"/>
+</svg>";
+
+pub const PLAY_SVG: &str = "<?xml version=\"1.0\" standalone=\"no\"?>
+<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
+<!-- Created using Krita: https://krita.org -->
+<svg xmlns=\"http://www.w3.org/2000/svg\" 
+    width=\"32pt\"
+    height=\"32pt\"
+    viewBox=\"0 0 32 32\">
+<defs/>
+<path fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 0 0 L 32 16 L 0 32 L 0 0\"/>
 </svg>";
 
 pub const NEXT_SVG: &str = "<?xml version=\"1.0\" standalone=\"no\"?>
 <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
 <!-- Created using Krita: https://krita.org -->
 <svg xmlns=\"http://www.w3.org/2000/svg\" 
-    xmlns:xlink=\"http://www.w3.org/1999/xlink\"
-    xmlns:krita=\"http://krita.org/namespaces/svg/krita\"
-    xmlns:sodipodi=\"http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd\"
     width=\"32pt\"
     height=\"32pt\"
     viewBox=\"0 0 32 32\">
 <defs/>
-<path id=\"shape0\" transform=\"translate(16, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 0 0 L 16 16 L 0 32 L 0 0\" sodipodi:nodetypes=\"cccc\"/>
-<path id=\"shape1\" fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 0 0 L 16 16 L 0 32 L 0 0\" sodipodi:nodetypes=\"cccc\"/>
+<path transform=\"translate(16, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 0 0 L 16 16 L 0 32 L 0 0\"/>
+<path fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 0 0 L 16 16 L 0 32 L 0 0\"/>
 </svg>";
 
