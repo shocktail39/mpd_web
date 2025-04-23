@@ -215,47 +215,32 @@ window.onload = function() {
 pub const PREV_SVG: &str = "<?xml version=\"1.0\" standalone=\"no\"?>
 <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
 <!-- Created using Krita: https://krita.org -->
-<svg xmlns=\"http://www.w3.org/2000/svg\" 
-    width=\"32pt\"
-    height=\"32pt\"
-    viewBox=\"0 0 32 32\">
+<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"32\">
 <defs/>
-<path transform=\"translate(16, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 16 0 L 16 32 L 0 16 L 16 0\"/>
-<path fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 16 0 L 16 32 L 0 16 L 16 0\"/>
+<path fill=\"#ff00cc\" d=\"M 16 0 L 16 32 L 0 16 L 16 0\"/>
+<path fill=\"#ff00cc\" d=\"M 32 0 L 32 32 L 16 16 L 32 0\"/>
 </svg>";
 
 pub const PAUSE_SVG: &str = "<?xml version=\"1.0\" standalone=\"no\"?>
 <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
 <!-- Created using Krita: https://krita.org -->
-<svg xmlns=\"http://www.w3.org/2000/svg\"
-    width=\"32pt\"
-    height=\"32pt\"
-    viewBox=\"0 0 32 32\">
-<defs/>
-<rect transform=\"translate(0, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" width=\"12\" height=\"32\"/>
-<rect transform=\"translate(20, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" width=\"12\" height=\"32\"/>
+<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"32\">
+<rect fill=\"#ff00cc\" x=\"0\" y=\"0\" width=\"12\" height=\"32\"/>
+<rect fill=\"#ff00cc\" x=\"20\" y=\"0\" width=\"12\" height=\"32\"/>
 </svg>";
 
 pub const PLAY_SVG: &str = "<?xml version=\"1.0\" standalone=\"no\"?>
 <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
 <!-- Created using Krita: https://krita.org -->
-<svg xmlns=\"http://www.w3.org/2000/svg\" 
-    width=\"32pt\"
-    height=\"32pt\"
-    viewBox=\"0 0 32 32\">
-<defs/>
-<path fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 0 0 L 32 16 L 0 32 L 0 0\"/>
+<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"32\">
+<path fill=\"#ff00cc\" d=\"M 0 0 L 32 16 L 0 32 L 0 0\"/>
 </svg>";
 
 pub const NEXT_SVG: &str = "<?xml version=\"1.0\" standalone=\"no\"?>
 <!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 20010904//EN\" \"http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd\">
 <!-- Created using Krita: https://krita.org -->
-<svg xmlns=\"http://www.w3.org/2000/svg\" 
-    width=\"32pt\"
-    height=\"32pt\"
-    viewBox=\"0 0 32 32\">
-<defs/>
-<path transform=\"translate(16, 0)\" fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 0 0 L 16 16 L 0 32 L 0 0\"/>
-<path fill=\"#ff00cc\" fill-rule=\"evenodd\" d=\"M 0 0 L 16 16 L 0 32 L 0 0\"/>
+<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"32\">
+<path fill=\"#ff00cc\" d=\"M 0 0 L 16 16 L 0 32 L 0 0\"/>
+<path fill=\"#ff00cc\" d=\"M 16 0 L 32 16 L 16 32 L 16 0\"/>
 </svg>";
 
