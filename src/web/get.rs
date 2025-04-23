@@ -1,5 +1,5 @@
 use crate::config::MPD_ADDRESS;
-use crate::web::{response, static_resources};
+use crate::web::{errors, mime_types, response, static_resources};
 use mpd::{Client, Song, State};
 use mpd::error::Result;
 
@@ -43,7 +43,7 @@ fn queue() -> Result<String> {
     Ok(response::ok(&json::stringify(json::object! {
         queue: queue_objects,
         queue_pos: queue_pos
-    }), "application/json"))
+    }), mime_types::JSON))
 }
 
 fn now_playing() -> Result<String> {
@@ -71,10 +71,10 @@ fn now_playing() -> Result<String> {
         elapsed: current_song_elapsed_time,
         duration: current_song_duration,
         is_playing: is_playing
-    }), "application/json"))
+    }), mime_types::JSON))
 }
 
-fn response_all_songs() -> Result<String> {
+fn all_songs() -> Result<String> {
     let mut mpd = Client::connect(MPD_ADDRESS)?;
     let song_file_names = mpd.listall()?;
     let mut song_list = vec![];
@@ -97,24 +97,24 @@ fn response_all_songs() -> Result<String> {
             artist: artist
         });
     }
-    Ok(response::ok(&json::stringify(song_list), "application/json"))
+    Ok(response::ok(&json::stringify(song_list), mime_types::JSON))
 }
 
 pub fn handle(head: &str) -> Result<String> {
-    let path_split = head[4..].split_once(" ");
-    match path_split {
-        Some(("/", _)) => Ok(response::ok(static_resources::CONTROL_PANEL, "text/html")),
-        Some(("/style.css", _)) => Ok(response::ok(static_resources::STYLE, "text/css")),
-        Some(("/script.js", _)) => Ok(response::ok(static_resources::SCRIPT, "text/javascript")),
-        Some(("/prev.svg", _)) => Ok(response::ok(static_resources::PREV_SVG, "image/svg+xml")),
-        Some(("/pause.svg", _)) => Ok(response::ok(static_resources::PAUSE_SVG, "image/svg+xml")),
-        Some(("/play.svg", _)) => Ok(response::ok(static_resources::PLAY_SVG, "image/svg+xml")),
-        Some(("/next.svg", _)) => Ok(response::ok(static_resources::NEXT_SVG, "image/svg+xml")),
-        Some(("/queue", _)) => queue(),
-        Some(("/nowplaying", _)) => now_playing(),
-        Some(("/allsongs", _)) => response_all_songs(),
-        Some(_) => Ok(response::error("404 Not Found")),
-        None => Ok(response::error("400 Bad Request"))
+    let path = head[4..].split_once(" ").map(|(left, _right)| left);
+    match path {
+        Some("/") => Ok(response::ok(static_resources::CONTROL_PANEL, mime_types::HTML)),
+        Some("/style.css") => Ok(response::ok(static_resources::STYLE, mime_types::CSS)),
+        Some("/script.js") => Ok(response::ok(static_resources::SCRIPT, mime_types::JAVASCRIPT)),
+        Some("/prev.svg") => Ok(response::ok(static_resources::PREV_SVG, mime_types::SVG)),
+        Some("/pause.svg") => Ok(response::ok(static_resources::PAUSE_SVG, mime_types::SVG)),
+        Some("/play.svg") => Ok(response::ok(static_resources::PLAY_SVG, mime_types::SVG)),
+        Some("/next.svg") => Ok(response::ok(static_resources::NEXT_SVG, mime_types::SVG)),
+        Some("/queue") => queue(),
+        Some("/nowplaying") => now_playing(),
+        Some("/allsongs") => all_songs(),
+        Some(_) => Ok(response::error(errors::NOT_FOUND)),
+        None => Ok(response::error(errors::BAD_REQUEST))
     }
 }
 

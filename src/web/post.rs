@@ -1,5 +1,5 @@
 use crate::config::MPD_ADDRESS;
-use crate::web::response;
+use crate::web::{errors, response};
 use mpd::{Client, State, Term, Query};
 use mpd::error::Result;
 use std::borrow::Cow;
@@ -66,16 +66,16 @@ fn next_song() -> Result<String> {
 }
 
 pub fn handle(head: &str, body: &str) -> Result<String> {
-    let path_split = head[5..].split_once(" ");
-    match path_split {
-        Some(("/addsong", _)) => add_song(body),
-        Some(("/removesong", _)) => remove_song(body),
-        Some(("/seek", _)) => seek(body),
-        Some(("/prev", _)) => previous_song(),
-        Some(("/pause", _)) => pause(),
-        Some(("/next", _)) => next_song(),
-        Some(_) => Ok(response::error("404 Not Found")),
-        None => Ok(response::error("400 Bad Request"))
+    let path = head[5..].split_once(" ").map(|(left, _right)| left);
+    match path {
+        Some("/addsong") => add_song(body),
+        Some("/removesong") => remove_song(body),
+        Some("/seek") => seek(body),
+        Some("/prev") => previous_song(),
+        Some("/pause") => pause(),
+        Some("/next") => next_song(),
+        Some(_) => Ok(response::error(errors::NOT_FOUND)),
+        None => Ok(response::error(errors::BAD_REQUEST))
     }
 }
 
