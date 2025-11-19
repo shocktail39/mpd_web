@@ -34,7 +34,7 @@ fn main() {
             Ok(mut stream) => {
                 thread::spawn(move||{
                     let (head, body) = parse_request(&mut stream);
-                    stream.write_all(web::handle_request(&head, &body).unwrap().as_bytes()).unwrap();
+                    stream.write_all(web::handle_request(&head, &body).as_bytes()).unwrap();
                 });
             }
             Err(e) => {eprintln!("{e}");}
