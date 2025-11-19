@@ -4,19 +4,10 @@ use mpd::{Client, Song, State};
 use mpd::error::Result;
 
 fn song_to_json(song: &Song) -> json::JsonValue {
-    let file = song.file.as_str();
-    let title = if let Some(t) = &song.title {
-        t.as_str()
-    } else {
-        file
-    };
-    let artist = if let Some(a) = &song.artist {
-        a.as_str()
-    } else {
-        "Other"
-    };
+    let title = song.title.clone().unwrap_or_else(|| song.file.clone());
+    let artist = song.artist.clone().unwrap_or_else(|| "Other".to_string());
     json::object! {
-        file: file,
+        file: song.file.clone(),
         title: title,
         artist: artist
     }
@@ -24,24 +15,14 @@ fn song_to_json(song: &Song) -> json::JsonValue {
 
 fn queue() -> Result<String> {
     let mut mpd = Client::connect(MPD_ADDRESS)?;
-    let queue = mpd.queue()?;
-    let queue_objects = {
-        let mut qs = vec![];
-        for song in queue {
-            qs.push(song_to_json(&song));
-        }
-        qs
-    };
+    let song_queue = mpd.queue()?;
+    let json_queue = song_queue.into_iter().map(|song| song_to_json(&song)).collect::<Vec<_>>();
 
     let status = mpd.status()?;
-    let queue_pos = if let Some(pos) = status.song {
-        pos.pos
-    } else {
-        0
-    };
+    let queue_pos = status.song.map_or(0, |queue_place| queue_place.pos);
 
     Ok(response::ok(&json::stringify(json::object! {
-        queue: queue_objects,
+        queue: json_queue,
         queue_pos: queue_pos
     }), mime_types::JSON))
 }
@@ -67,13 +48,12 @@ fn now_playing() -> Result<String> {
 fn all_songs() -> Result<String> {
     let mut mpd = Client::connect(MPD_ADDRESS)?;
     let song_file_names = mpd.listall()?;
-    let mut song_list = vec![];
-    for song in song_file_names {
+    let song_list = song_file_names.into_iter().filter_map(|filename| {
         // listall only gives file names, not info such as title or artist,
         // so we gotta query each file individually.
-        let song_with_info = &mpd.lsinfo(song)?[0];
-        song_list.push(song_to_json(song_with_info));
-    }
+        let maybe_song = mpd.lsinfo(filename).ok().map(|mut song_vec| song_vec.swap_remove(0));
+        maybe_song.map(|song| song_to_json(&song))
+    }).collect::<Vec<_>>();
     Ok(response::ok(&json::stringify(song_list), mime_types::JSON))
 }
 
