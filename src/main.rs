@@ -16,17 +16,14 @@ fn parse_request(stream: &mut TcpStream) -> (String, String) {
        head.push_str(&next_line);
     }
 
-    const CL_HEADER: &str = "Content-Length: ";
-    let mut body = String::new();
-    if let Some(cl_position) = head.find(CL_HEADER) {
-        if let Some((length_str, _)) = head[cl_position + CL_HEADER.len()..].split_once("\r\n") {
-            if let Ok(length) = length_str.trim().parse::<usize>() {
-                let mut buf = vec![0u8; length];
-                let _ = reader.read_exact(&mut buf);
-                body = String::from_utf8(buf).unwrap();
-            }
-        }
-    }
+    const CL_HEADER: &str = "\r\nContent-Length: ";
+    let cl_header_split = head.split_once(CL_HEADER);
+    let length_split = cl_header_split.and_then(|(_, right_side)| right_side.split_once("\r\n"));
+    let maybe_length = length_split.and_then(|(length_str, _)| length_str.parse::<usize>().ok());
+    let body = maybe_length.and_then(|length| {
+        let mut buf = vec![0u8; length];
+        reader.read_exact(&mut buf).ok().and_then(|()| String::from_utf8(buf).ok())
+    }).unwrap_or_default();
     (head, body)
 }
 

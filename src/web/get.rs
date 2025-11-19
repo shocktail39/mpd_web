@@ -77,21 +77,19 @@ fn all_songs() -> Result<String> {
     Ok(response::ok(&json::stringify(song_list), mime_types::JSON))
 }
 
-pub fn handle(head: &str) -> Result<String> {
-    let path = head[4..].split_once(" ").map(|(left, _right)| left);
+pub fn handle(path: &str) -> Result<String> {
     match path {
-        Some("/") => Ok(response::ok(static_resources::CONTROL_PANEL, mime_types::HTML)),
-        Some("/style.css") => Ok(response::ok(static_resources::STYLE, mime_types::CSS)),
-        Some("/script.js") => Ok(response::ok(static_resources::SCRIPT, mime_types::JAVASCRIPT)),
-        Some("/prev.svg") => Ok(response::ok(static_resources::PREV_SVG, mime_types::SVG)),
-        Some("/pause.svg") => Ok(response::ok(static_resources::PAUSE_SVG, mime_types::SVG)),
-        Some("/play.svg") => Ok(response::ok(static_resources::PLAY_SVG, mime_types::SVG)),
-        Some("/next.svg") => Ok(response::ok(static_resources::NEXT_SVG, mime_types::SVG)),
-        Some("/queue") => queue(),
-        Some("/nowplaying") => now_playing(),
-        Some("/allsongs") => all_songs(),
-        Some(_) => Ok(response::error(errors::NOT_FOUND)),
-        None => Ok(response::error(errors::BAD_REQUEST))
+        "/" => Ok(response::ok(static_resources::CONTROL_PANEL, mime_types::HTML)),
+        "/style.css" => Ok(response::ok(static_resources::STYLE, mime_types::CSS)),
+        "/script.js" => Ok(response::ok(static_resources::SCRIPT, mime_types::JAVASCRIPT)),
+        "/prev.svg" => Ok(response::ok(static_resources::PREV_SVG, mime_types::SVG)),
+        "/pause.svg" => Ok(response::ok(static_resources::PAUSE_SVG, mime_types::SVG)),
+        "/play.svg" => Ok(response::ok(static_resources::PLAY_SVG, mime_types::SVG)),
+        "/next.svg" => Ok(response::ok(static_resources::NEXT_SVG, mime_types::SVG)),
+        "/queue" => queue(),
+        "/nowplaying" => now_playing(),
+        "/allsongs" => all_songs(),
+        _ => Ok(response::error(errors::NOT_FOUND)),
     }
 }
 
