@@ -26,7 +26,7 @@ fn queue() -> Vec<u8> {
     };
     let queue_pos = status.song.map_or(0, |queue_place| queue_place.pos);
 
-    response::ok(&json::stringify(json::object! {
+    response::ok(json::stringify(json::object! {
         queue: json_queue,
         queue_pos: queue_pos
     }).as_bytes(), mime_types::JSON)
@@ -48,7 +48,7 @@ fn now_playing() -> Vec<u8> {
     let current_song_duration = status.duration.map_or(0, |duration| duration.as_secs());
     let is_playing = status.state == State::Play;
 
-    response::ok(&json::stringify(json::object! {
+    response::ok(json::stringify(json::object! {
         now_playing: now_playing,
         elapsed: current_song_elapsed_time,
         duration: current_song_duration,
@@ -69,7 +69,7 @@ fn all_songs() -> Vec<u8> {
         let maybe_song = mpd.lsinfo(filename).ok().map(|mut song_vec| song_vec.swap_remove(0));
         maybe_song.map(song_to_json)
     }).collect::<Vec<_>>();
-    response::ok(&json::stringify(song_list).as_bytes(), mime_types::JSON)
+    response::ok(json::stringify(song_list).as_bytes(), mime_types::JSON)
 }
 
 pub fn handle(path: &str) -> Vec<u8> {

@@ -1,14 +1,28 @@
 use crate::config::MPD_ADDRESS;
 use crate::web::{errors, response};
-use mpd::{Client, State, Term, Query};
-use std::borrow::Cow;
+use mpd::{Client, State};
+use std::io::{BufRead, BufReader, Write};
+use std::net::TcpStream;
 
 fn add_song(filename: &str) -> Vec<u8> {
-    let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
+    // the mpd crate doesn't have a function for the add command,
+    // so let's make our own.
+    let Ok(mut mpd) = TcpStream::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
-    let mut query = Query::new();
-    let Ok(()) = mpd.findadd(query.and(Term::File, Cow::from(filename))) else {
+    {
+        let mut buffer = String::new();
+        let mut reader = BufReader::new(&mut mpd);
+        let Ok(_bytes_read) = reader.read_line(&mut buffer) else {
+            return response::error(errors::INTERNAL);
+        };
+        if !buffer.starts_with("OK MPD ") {
+            return response::error(errors::INTERNAL);
+        }
+    }
+    let escaped_filename = filename.replace("\"", "\\\"");
+    let mpd_command = format!("add \"{escaped_filename}\"\n").into_bytes();
+    let Ok(()) = mpd.write_all(&mpd_command) else {
         return response::error(errors::INTERNAL);
     };
     response::ok_no_content()
