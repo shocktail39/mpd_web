@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>music control panel</title>
+        <link rel="stylesheet" href="/style.css" />
+        <script src="/script.js"></script>
+    </head>
+    <body>
+        <div id="all_songs"></div>
+        <div id="right_side">
+            <div id="controls">
+                <h1 id="now_playing"></h1>
+                <input id="timer_slider" type="range" oninput="seek_time();" />
+                <h3 id="timer_text"></h3>
+                <button type="button" class="control" onclick="prev_song();"><img src="/prev.svg" /></button>
+                <button type="button" class="control" onclick="toggle_pause();"><img id="pause_button_image" src="/play.svg" /></button>
+                <button type="button" class="control" onclick="next_song();"><img src="/next.svg" /></button>
+            </div>
+            <div id="queue_div">
+                <h2>queue</h2>
+                <ol id="queue"></ol>
+            </div>
+        </div>
+    </body>
+</html>
+

@@ -1,0 +1,42 @@
+body {
+    background-color: #306;
+    color: #f0c;
+    height: 100vh;
+    display: flex;
+    margin: 0;
+}
+
+.control {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+#all_songs {
+    overflow-y: scroll;
+    border-right: solid 1px black;
+}
+
+#right_side {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 32;
+}
+
+#controls {
+    border-bottom: solid 1px black;
+}
+
+#queue_div {
+    overflow-y: scroll;
+}
+
+.current_song {
+    font-weight: bold;
+}
+
+#timer_slider {
+    width: 100%;
+}
+

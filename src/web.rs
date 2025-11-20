@@ -5,7 +5,7 @@ mod post;
 mod response;
 mod static_resources;
 
-pub fn handle_request(head: &str, body: &str) -> String {
+pub fn handle_request(head: &str, body: &str) -> Vec<u8> {
     let first_line_split = head.split_once("\r\n");
     let method_split = first_line_split.and_then(|(first_line, _headers)| first_line.split_once(" "));
     let method_and_path = method_split.and_then(|(method, path_and_version)| {

@@ -3,7 +3,7 @@ use crate::web::{errors, response};
 use mpd::{Client, State, Term, Query};
 use std::borrow::Cow;
 
-fn add_song(filename: &str) -> String {
+fn add_song(filename: &str) -> Vec<u8> {
     let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
@@ -14,7 +14,7 @@ fn add_song(filename: &str) -> String {
     response::ok_no_content()
 }
 
-fn remove_song(position_str: &str) -> String {
+fn remove_song(position_str: &str) -> Vec<u8> {
     let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
@@ -26,7 +26,7 @@ fn remove_song(position_str: &str) -> String {
     response::ok_no_content()
 }
 
-fn seek(time_str: &str) -> String {
+fn seek(time_str: &str) -> Vec<u8> {
     let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
@@ -38,7 +38,7 @@ fn seek(time_str: &str) -> String {
     response::ok_no_content()
 }
 
-fn previous_song() -> String {
+fn previous_song() -> Vec<u8> {
     let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
@@ -48,7 +48,7 @@ fn previous_song() -> String {
     response::ok_no_content()
 }
 
-fn pause() -> String {
+fn pause() -> Vec<u8> {
     let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
@@ -67,7 +67,7 @@ fn pause() -> String {
     response::ok_no_content()
 }
 
-fn next_song() -> String {
+fn next_song() -> Vec<u8> {
     let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
@@ -77,7 +77,7 @@ fn next_song() -> String {
     response::ok_no_content()
 }
 
-pub fn handle(path: &str, body: &str) -> String {
+pub fn handle(path: &str, body: &str) -> Vec<u8> {
     match path {
         "/addsong" => add_song(body),
         "/removesong" => remove_song(body),

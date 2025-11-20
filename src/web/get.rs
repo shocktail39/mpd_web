@@ -12,7 +12,7 @@ fn song_to_json(song: Song) -> json::JsonValue {
     }
 }
 
-fn queue() -> String {
+fn queue() -> Vec<u8> {
     let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
@@ -29,10 +29,10 @@ fn queue() -> String {
     response::ok(&json::stringify(json::object! {
         queue: json_queue,
         queue_pos: queue_pos
-    }), mime_types::JSON)
+    }).as_bytes(), mime_types::JSON)
 }
 
-fn now_playing() -> String {
+fn now_playing() -> Vec<u8> {
     let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
@@ -53,10 +53,10 @@ fn now_playing() -> String {
         elapsed: current_song_elapsed_time,
         duration: current_song_duration,
         is_playing: is_playing
-    }), mime_types::JSON)
+    }).as_bytes(), mime_types::JSON)
 }
 
-fn all_songs() -> String {
+fn all_songs() -> Vec<u8> {
     let Ok(mut mpd) = Client::connect(MPD_ADDRESS) else {
         return response::error(errors::INTERNAL);
     };
@@ -69,10 +69,10 @@ fn all_songs() -> String {
         let maybe_song = mpd.lsinfo(filename).ok().map(|mut song_vec| song_vec.swap_remove(0));
         maybe_song.map(song_to_json)
     }).collect::<Vec<_>>();
-    response::ok(&json::stringify(song_list), mime_types::JSON)
+    response::ok(&json::stringify(song_list).as_bytes(), mime_types::JSON)
 }
 
-pub fn handle(path: &str) -> String {
+pub fn handle(path: &str) -> Vec<u8> {
     match path {
         "/" => response::ok(static_resources::CONTROL_PANEL, mime_types::HTML),
         "/style.css" => response::ok(static_resources::STYLE, mime_types::CSS),
