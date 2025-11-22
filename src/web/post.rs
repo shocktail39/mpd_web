@@ -5,6 +5,11 @@ use std::io::{BufRead, BufReader, Write};
 use std::net::TcpStream;
 
 fn add_song(filename: &str) -> Vec<u8> {
+    // ignore any filenames with new lines,
+    // to avoid possible mpd command injection
+    if filename.contains(['\r', '\n']) {
+        return response::error(errors::BAD_REQUEST);
+    }
     // the mpd crate doesn't have a function for the add command,
     // so let's make our own.
     let Ok(mut mpd) = TcpStream::connect(MPD_ADDRESS) else {
@@ -20,8 +25,8 @@ fn add_song(filename: &str) -> Vec<u8> {
             return response::error(errors::INTERNAL);
         }
     }
-    let escaped_filename = filename.replace("\"", "\\\"");
-    let mpd_command = format!("add \"{escaped_filename}\"\n").into_bytes();
+    let unescaped_filename = filename.replace('\\', "\\\\").replace('\"', "\\\"");
+    let mpd_command = format!("add \"{unescaped_filename}\"\n").into_bytes();
     let Ok(()) = mpd.write_all(&mpd_command) else {
         return response::error(errors::INTERNAL);
     };
